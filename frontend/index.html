@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CitationCheck — AI Citation Forensics</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --bg:#05080c;--surface:#0c1117;--surface2:#121920;
+  --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.13);
+  --text:#dde4ed;--muted:#3d4f63;--accent:#00c2ff;
+  --red:#ff3d5a;--orange:#ff8c42;--yellow:#ffd60a;--green:#00e096;--gray:#555f6e;
+  --mono:'JetBrains Mono',monospace;--sans:'Syne',sans-serif;
+}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--sans);}
+
+body::before{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:
+    radial-gradient(ellipse 60% 40% at 10% 10%, rgba(0,194,255,0.04) 0%, transparent 60%),
+    radial-gradient(ellipse 40% 50% at 90% 80%, rgba(0,224,150,0.03) 0%, transparent 60%);
+}
+
+.app{position:relative;z-index:1;min-height:100vh;display:flex;flex-direction:column;}
+
+/* NAV */
+nav{
+  padding:20px 48px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+  background:rgba(5,8,12,0.8);backdrop-filter:blur(12px);
+  position:sticky;top:0;z-index:100;
+}
+.nav-logo{display:flex;align-items:center;gap:12px;}
+.logo-mark{
+  width:34px;height:34px;border:1.5px solid var(--accent);border-radius:6px;
+  display:flex;align-items:center;justify-content:center;
+  background:rgba(0,194,255,0.06);
+}
+.nav-title{font-size:18px;font-weight:800;letter-spacing:-0.5px;}
+.nav-title span{color:var(--accent);}
+.nav-badge{
+  font-family:var(--mono);font-size:10px;color:var(--muted);
+  border:1px solid var(--border);padding:4px 10px;border-radius:4px;letter-spacing:0.5px;
+}
+.nav-links{display:flex;gap:24px;align-items:center;}
+.nav-links a{
+  font-family:var(--mono);font-size:11px;color:var(--muted);
+  text-decoration:none;transition:color 0.2s;letter-spacing:0.5px;
+}
+.nav-links a:hover{color:var(--accent);}
+.github-btn{
+  border:1px solid var(--border2);padding:6px 14px;border-radius:6px;
+  color:var(--text) !important;
+}
+.github-btn:hover{border-color:var(--accent) !important;background:rgba(0,194,255,0.06);}
+
+/* MAIN */
+main{flex:1;padding:56px 48px;max-width:1200px;margin:0 auto;width:100%;}
+
+/* HERO */
+.hero{margin-bottom:52px;animation:fadeUp 0.5s ease both;}
+.hero-eyebrow{
+  font-family:var(--mono);font-size:11px;color:var(--accent);
+  letter-spacing:2px;text-transform:uppercase;margin-bottom:16px;
+  display:flex;align-items:center;gap:10px;
+}
+.hero-eyebrow::before{content:'';width:24px;height:1px;background:var(--accent);}
+.hero h1{
+  font-size:clamp(36px,5vw,64px);font-weight:800;
+  line-height:1.0;letter-spacing:-2px;margin-bottom:18px;
+}
+.hero h1 em{font-style:normal;color:var(--accent);}
+.hero p{
+  font-family:var(--mono);font-size:13px;color:var(--muted);
+  line-height:1.8;max-width:600px;
+}
+
+/* HOW IT WORKS */
+.how-it-works{
+  display:flex;gap:0;margin-bottom:52px;
+  border:1px solid var(--border);border-radius:12px;overflow:hidden;
+  animation:fadeUp 0.5s 0.1s ease both;
+}
+.step{
+  flex:1;padding:20px 24px;position:relative;
+  border-right:1px solid var(--border);
+}
+.step:last-child{border-right:none;}
+.step-num{
+  font-family:var(--mono);font-size:10px;color:var(--accent);
+  letter-spacing:1px;margin-bottom:8px;
+}
+.step-title{font-size:13px;font-weight:700;margin-bottom:4px;}
+.step-desc{font-family:var(--mono);font-size:11px;color:var(--muted);line-height:1.6;}
+
+/* INPUT CARD */
+.input-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:12px;overflow:hidden;margin-bottom:20px;
+  animation:fadeUp 0.5s 0.15s ease both;
+}
+.card-header{
+  padding:14px 22px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+  background:rgba(255,255,255,0.02);
+}
+.card-label{font-family:var(--mono);font-size:10px;color:var(--accent);letter-spacing:1px;text-transform:uppercase;}
+.card-meta{font-family:var(--mono);font-size:10px;color:var(--muted);}
+textarea{
+  width:100%;min-height:130px;background:transparent;
+  border:none;outline:none;resize:none;padding:20px 22px;
+  font-family:var(--mono);font-size:13px;color:var(--text);line-height:1.7;
+}
+textarea::placeholder{color:var(--muted);opacity:0.5;}
+
+/* CITATIONS */
+.citations-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:12px;overflow:hidden;margin-bottom:20px;
+  animation:fadeUp 0.5s 0.2s ease both;
+}
+.citation-row{
+  display:grid;grid-template-columns:1fr 1fr auto;gap:12px;
+  padding:14px 22px;border-bottom:1px solid var(--border);align-items:center;
+}
+.citation-row:last-of-type{border-bottom:none;}
+.citation-input{
+  background:var(--surface2);border:1px solid var(--border);
+  border-radius:6px;padding:9px 13px;
+  font-family:var(--mono);font-size:12px;color:var(--text);
+  outline:none;width:100%;transition:border-color 0.2s;
+}
+.citation-input:focus{border-color:var(--accent);}
+.citation-input::placeholder{color:var(--muted);opacity:0.5;}
+.remove-btn{
+  background:transparent;border:1px solid var(--border);
+  color:var(--muted);width:30px;height:30px;border-radius:6px;
+  cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;
+  transition:all 0.2s;flex-shrink:0;
+}
+.remove-btn:hover{border-color:var(--red);color:var(--red);}
+.citations-footer{
+  padding:14px 22px;border-top:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+  background:rgba(255,255,255,0.01);
+}
+.add-btn{
+  background:transparent;border:1px solid var(--border2);color:var(--text);
+  padding:8px 16px;border-radius:6px;font-family:var(--mono);font-size:11px;
+  cursor:pointer;transition:all 0.2s;letter-spacing:0.5px;display:flex;align-items:center;gap:8px;
+}
+.add-btn:hover{border-color:var(--accent);color:var(--accent);}
+
+/* SAMPLE */
+.sample-row{
+  display:flex;gap:10px;flex-wrap:wrap;margin-bottom:28px;
+  animation:fadeUp 0.5s 0.25s ease both;
+}
+.sample-chip{
+  background:var(--surface);border:1px solid var(--border2);
+  color:var(--muted);padding:7px 14px;border-radius:20px;
+  font-family:var(--mono);font-size:11px;cursor:pointer;transition:all 0.2s;
+}
+.sample-chip:hover{border-color:var(--accent);color:var(--accent);}
+
+/* RUN BUTTON */
+.run-row{display:flex;justify-content:center;margin-bottom:48px;animation:fadeUp 0.5s 0.3s ease both;}
+.run-btn{
+  background:var(--accent);color:#000;border:none;
+  padding:16px 52px;border-radius:8px;
+  font-family:var(--sans);font-size:15px;font-weight:700;
+  cursor:pointer;letter-spacing:0.5px;transition:all 0.2s;
+  display:flex;align-items:center;gap:10px;position:relative;overflow:hidden;
+}
+.run-btn::after{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,0.2),transparent);
+  transform:translateX(-100%);transition:transform 0.5s;
+}
+.run-btn:hover::after{transform:translateX(100%);}
+.run-btn:hover{background:#00d9ff;transform:translateY(-2px);box-shadow:0 10px 40px rgba(0,194,255,0.3);}
+.run-btn:disabled{opacity:0.4;cursor:not-allowed;transform:none;box-shadow:none;}
+
+/* LOADING */
+.loading{display:none;flex-direction:column;align-items:center;gap:24px;padding:60px;animation:fadeUp 0.4s ease;}
+.loading.active{display:flex;}
+.loading-label{font-family:var(--mono);font-size:11px;color:var(--accent);letter-spacing:2px;animation:blink 1.4s infinite;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:0.3;}}
+.progress-track{width:340px;height:3px;background:var(--surface2);border-radius:2px;overflow:hidden;}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--green));border-radius:2px;animation:progress 2.5s ease-in-out infinite;}
+@keyframes progress{0%{width:0%;margin-left:0;}70%{width:80%;margin-left:0;}100%{width:10%;margin-left:90%;}}
+.loading-steps{display:flex;flex-direction:column;gap:8px;align-items:flex-start;width:340px;}
+.loading-step{font-family:var(--mono);font-size:11px;color:var(--muted);display:flex;align-items:center;gap:10px;transition:all 0.3s;}
+.loading-step.active{color:var(--text);}
+.loading-step.done{color:var(--green);}
+.step-dot{width:6px;height:6px;border-radius:50%;background:var(--muted);flex-shrink:0;transition:all 0.3s;}
+.loading-step.active .step-dot{background:var(--accent);box-shadow:0 0 8px var(--accent);}
+.loading-step.done .step-dot{background:var(--green);}
+
+/* RESULTS */
+#results{display:none;animation:fadeUp 0.5s ease;}
+#results.active{display:block;}
+
+/* OVERALL SCORE */
+.overall-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:12px;padding:32px;margin-bottom:24px;
+  display:grid;grid-template-columns:auto 1fr auto;gap:32px;align-items:center;
+  position:relative;overflow:hidden;
+}
+.overall-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,var(--red),var(--orange),var(--yellow),var(--green));
+}
+.score-ring{
+  width:90px;height:90px;position:relative;flex-shrink:0;
+}
+.score-ring svg{transform:rotate(-90deg);}
+.score-ring-num{
+  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  font-family:var(--sans);font-size:26px;font-weight:800;
+}
+.overall-info{}
+.overall-eyebrow{font-family:var(--mono);font-size:10px;color:var(--accent);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;}
+.overall-verdict{font-family:var(--mono);font-size:13px;color:var(--text);line-height:1.7;}
+.trust-badge{
+  padding:8px 18px;border-radius:20px;font-family:var(--mono);
+  font-size:12px;font-weight:700;letter-spacing:0.5px;flex-shrink:0;
+}
+.trust-high{background:rgba(0,224,150,0.15);color:var(--green);border:1px solid rgba(0,224,150,0.3);}
+.trust-medium{background:rgba(255,214,10,0.1);color:var(--yellow);border:1px solid rgba(255,214,10,0.2);}
+.trust-low{background:rgba(255,140,66,0.1);color:var(--orange);border:1px solid rgba(255,140,66,0.2);}
+.trust-very_low{background:rgba(255,61,90,0.1);color:var(--red);border:1px solid rgba(255,61,90,0.2);}
+
+/* CITATION RESULTS */
+.results-label{
+  font-family:var(--mono);font-size:10px;color:var(--muted);
+  letter-spacing:1px;text-transform:uppercase;margin-bottom:16px;
+}
+.citation-result{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:12px;margin-bottom:16px;overflow:hidden;transition:border-color 0.2s;
+}
+.citation-result:hover{border-color:var(--border2);}
+.result-header{
+  padding:16px 22px;display:flex;align-items:center;gap:16px;
+  cursor:pointer;user-select:none;
+}
+.result-status-badge{
+  padding:4px 12px;border-radius:4px;
+  font-family:var(--mono);font-size:11px;font-weight:700;
+  flex-shrink:0;letter-spacing:0.3px;
+}
+.status-faithful{background:rgba(0,224,150,0.12);color:var(--green);}
+.status-exaggerated{background:rgba(255,140,66,0.12);color:var(--orange);}
+.status-misleading{background:rgba(255,214,10,0.1);color:var(--yellow);}
+.status-hallucinated{background:rgba(255,61,90,0.1);color:var(--red);}
+.status-unrelated{background:rgba(85,95,110,0.2);color:var(--gray);}
+.status-unverifiable{background:rgba(85,95,110,0.2);color:var(--gray);}
+
+.result-url{
+  font-family:var(--mono);font-size:11px;color:var(--muted);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;
+}
+.result-score{
+  font-family:var(--mono);font-size:13px;font-weight:700;
+  flex-shrink:0;margin-left:auto;
+}
+.chevron{color:var(--muted);transition:transform 0.2s;flex-shrink:0;}
+.citation-result.open .chevron{transform:rotate(180deg);}
+
+.result-body{display:none;border-top:1px solid var(--border);}
+.citation-result.open .result-body{display:block;}
+
+.result-grid{display:grid;grid-template-columns:1fr 1fr;gap:0;}
+.result-col{padding:20px 22px;}
+.result-col:first-child{border-right:1px solid var(--border);}
+.result-col-label{
+  font-family:var(--mono);font-size:10px;color:var(--accent);
+  letter-spacing:1px;text-transform:uppercase;margin-bottom:10px;
+}
+.result-col-text{font-family:var(--mono);font-size:12px;color:var(--text);line-height:1.7;}
+.fabricated-tag{
+  display:inline-block;margin-top:10px;padding:6px 12px;
+  background:rgba(255,61,90,0.08);border:1px solid rgba(255,61,90,0.2);
+  border-radius:4px;font-family:var(--mono);font-size:11px;color:var(--red);
+}
+.source-link{
+  display:inline-flex;align-items:center;gap:6px;margin-top:12px;
+  font-family:var(--mono);font-size:11px;color:var(--accent);
+  text-decoration:none;border:1px solid var(--border);padding:6px 12px;
+  border-radius:4px;transition:all 0.2s;
+}
+.source-link:hover{background:rgba(0,194,255,0.06);}
+
+/* RESET */
+.reset-row{display:flex;justify-content:center;padding:24px 0 48px;}
+.reset-btn{
+  background:transparent;border:1px solid var(--border2);color:var(--muted);
+  padding:12px 32px;border-radius:8px;font-family:var(--mono);font-size:12px;
+  cursor:pointer;transition:all 0.2s;letter-spacing:0.5px;
+}
+.reset-btn:hover{border-color:var(--accent);color:var(--accent);}
+
+/* FOOTER */
+footer{
+  border-top:1px solid var(--border);padding:16px 48px;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.footer-text{font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:0.5px;}
+.footer-text a{color:var(--accent);text-decoration:none;}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);}}
+
+@media(max-width:900px){
+  nav,main,footer{padding-left:20px;padding-right:20px;}
+  .overall-card{grid-template-columns:1fr;text-align:center;}
+  .result-grid{grid-template-columns:1fr;}
+  .result-col:first-child{border-right:none;border-bottom:1px solid var(--border);}
+  .how-it-works{flex-direction:column;}
+  .step{border-right:none;border-bottom:1px solid var(--border);}
+  .step:last-child{border-bottom:none;}
+  .citation-row{grid-template-columns:1fr;gap:8px;}
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+<nav>
+  <div class="nav-logo">
+    <div class="logo-mark">
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+        <path d="M9 2L16 6V12L9 16L2 12V6L9 2Z" stroke="#00c2ff" stroke-width="1.2" fill="none"/>
+        <circle cx="9" cy="9" r="2.5" fill="#00c2ff"/>
+      </svg>
+    </div>
+    <div class="nav-title">Citation<span>Check</span></div>
+  </div>
+  <div class="nav-links">
+    <a href="https://github.com/Rabba-Meghana/citation-check" target="_blank" class="github-btn">⭐ GitHub</a>
+  </div>
+</nav>
+
+<main>
+
+  <div class="hero">
+    <div class="hero-eyebrow">AI Citation Forensics</div>
+    <h1>Does your AI's<br><em>source</em> back its claim?</h1>
+    <p>// Paste any AI answer with citations. We fetch every source URL, compare what the AI claimed vs what's actually there, and expose hallucinated citations in real time.</p>
+  </div>
+
+  <div class="how-it-works">
+    <div class="step"><div class="step-num">// 01</div><div class="step-title">Paste AI Answer</div><div class="step-desc">Any Perplexity, ChatGPT, or Gemini answer with source citations</div></div>
+    <div class="step"><div class="step-num">// 02</div><div class="step-title">Add Citations</div><div class="step-desc">Each URL + the specific claim the AI made about it</div></div>
+    <div class="step"><div class="step-num">// 03</div><div class="step-title">We Fetch Sources</div><div class="step-desc">Live scraping of each URL to get actual content</div></div>
+    <div class="step"><div class="step-num">// 04</div><div class="step-title">Claude Compares</div><div class="step-desc">Semantic comparison: claim vs source. Hallucinations exposed.</div></div>
+  </div>
+
+  <!-- AI Answer -->
+  <div class="input-card">
+    <div class="card-header">
+      <span class="card-label">// AI-Generated Answer</span>
+      <span class="card-meta">Paste the full answer text</span>
+    </div>
+    <textarea id="answerText" placeholder="Paste the AI-generated answer here...
+
+Example: 'According to NASA, the James Webb Space Telescope captured its first images in July 2022 [1]. Researchers at MIT found that the telescope can detect atmospheres of exoplanets with 95% accuracy [2].'"></textarea>
+  </div>
+
+  <!-- Citations -->
+  <div class="citations-card">
+    <div class="card-header">
+      <span class="card-label">// Citations to Verify</span>
+      <span class="card-meta">URL + exact claim made about each source</span>
+    </div>
+    <div id="citationRows">
+      <div class="citation-row">
+        <input type="url" class="citation-input url-input" placeholder="https://source-url.com/article...">
+        <input type="text" class="citation-input claim-input" placeholder="Exact claim the AI made citing this URL...">
+        <button class="remove-btn" onclick="removeRow(this)">×</button>
+      </div>
+      <div class="citation-row">
+        <input type="url" class="citation-input url-input" placeholder="https://source-url.com/article...">
+        <input type="text" class="citation-input claim-input" placeholder="Exact claim the AI made citing this URL...">
+        <button class="remove-btn" onclick="removeRow(this)">×</button>
+      </div>
+    </div>
+    <div class="citations-footer">
+      <button class="add-btn" onclick="addRow()">+ Add Citation</button>
+      <span style="font-family:var(--mono);font-size:10px;color:var(--muted);">Max 10 citations</span>
+    </div>
+  </div>
+
+  <!-- Samples -->
+  <div class="sample-row">
+    <span style="font-family:var(--mono);font-size:10px;color:var(--muted);align-self:center;letter-spacing:1px;">TRY SAMPLE →</span>
+    <button class="sample-chip" onclick="loadSample('jwst')">🔭 James Webb Telescope</button>
+    <button class="sample-chip" onclick="loadSample('ai')">🤖 AI Research Claim</button>
+    <button class="sample-chip" onclick="loadSample('health')">🏥 Health Study</button>
+  </div>
+
+  <div class="run-row">
+    <button class="run-btn" id="runBtn" onclick="runCheck()">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3 2l10 6-10 6V2z"/></svg>
+      VERIFY CITATIONS
+    </button>
+  </div>
+
+  <!-- Loading -->
+  <div class="loading" id="loading">
+    <div class="loading-label" id="loadingLabel">INITIALIZING...</div>
+    <div class="progress-track"><div class="progress-fill"></div></div>
+    <div class="loading-steps">
+      <div class="loading-step" id="step1"><div class="step-dot"></div>Fetching source URLs...</div>
+      <div class="loading-step" id="step2"><div class="step-dot"></div>Extracting content...</div>
+      <div class="loading-step" id="step3"><div class="step-dot"></div>Comparing claims vs sources...</div>
+      <div class="loading-step" id="step4"><div class="step-dot"></div>Generating forensic report...</div>
+    </div>
+  </div>
+
+  <!-- Results -->
+  <div id="results">
+
+    <div class="overall-card" id="overallCard">
+      <div class="score-ring">
+        <svg width="90" height="90" viewBox="0 0 90 90">
+          <circle cx="45" cy="45" r="38" fill="none" stroke="#121920" stroke-width="8"/>
+          <circle cx="45" cy="45" r="38" fill="none" stroke="#00c2ff" stroke-width="8"
+            stroke-dasharray="239" stroke-dashoffset="239" id="scoreCircle"
+            stroke-linecap="round" style="transition:stroke-dashoffset 1s ease;"/>
+        </svg>
+        <div class="score-ring-num" id="scoreNum">—</div>
+      </div>
+      <div class="overall-info">
+        <div class="overall-eyebrow">// Overall Faithfulness Score</div>
+        <div class="overall-verdict" id="overallVerdict">Analyzing...</div>
+      </div>
+      <div class="trust-badge" id="trustBadge">—</div>
+    </div>
+
+    <div class="results-label">// Citation-by-Citation Breakdown — click to expand</div>
+    <div id="citationResults"></div>
+
+    <div class="reset-row">
+      <button class="reset-btn" onclick="resetAll()">← Check Another Answer</button>
+    </div>
+  </div>
+
+</main>
+
+<footer>
+  <div class="footer-text">CITATIONCHECK // BUILT FOR PERPLEXITY AI FELLOWSHIP APPLICATION</div>
+  <div class="footer-text">by <a href="https://github.com/Rabba-Meghana" target="_blank">@Rabba-Meghana</a></div>
+</footer>
+
+</div>
+
+<script>
+const SAMPLES = {
+  jwst: {
+    answer: "The James Webb Space Telescope (JWST) successfully launched on December 25, 2021, and delivered its first full-color images on July 12, 2022. According to NASA, JWST is 100 times more powerful than Hubble. Researchers have confirmed it can detect biosignatures in exoplanet atmospheres within days of observation.",
+    citations: [
+      { url: "https://www.nasa.gov/webbfirstimages", claim: "JWST delivered its first full-color images on July 12, 2022 and is 100 times more powerful than Hubble" },
+      { url: "https://www.nature.com/articles/d41586-022-01851-2", claim: "JWST can detect biosignatures in exoplanet atmospheres within days" }
+    ]
+  },
+  ai: {
+    answer: "OpenAI's GPT-4 has 1 trillion parameters according to multiple research sources. A Stanford study found that LLMs hallucinate in 27% of medical queries, making them unreliable for healthcare. Google's Gemini outperforms GPT-4 on 85% of benchmarks according to independent testing.",
+    citations: [
+      { url: "https://openai.com/research/gpt-4", claim: "GPT-4 has 1 trillion parameters" },
+      { url: "https://hai.stanford.edu/news/hallucination-crisis", claim: "LLMs hallucinate in 27% of medical queries" }
+    ]
+  },
+  health: {
+    answer: "A Harvard Medical School study found that intermittent fasting reduces the risk of type 2 diabetes by 40%. Research published in the Lancet confirmed that daily aspirin intake reduces heart attack risk by 50% in healthy adults over 50.",
+    citations: [
+      { url: "https://www.hsph.harvard.edu/news/hsph-in-the-news/intermittent-fasting-and-diabetes/", claim: "Intermittent fasting reduces type 2 diabetes risk by 40%" },
+      { url: "https://www.thelancet.com/journals/lancet/article/PIIS0140-6736(18)31741-9/fulltext", claim: "Daily aspirin reduces heart attack risk by 50% in healthy adults over 50" }
+    ]
+  }
+};
+
+function loadSample(key) {
+  const s = SAMPLES[key];
+  document.getElementById('answerText').value = s.answer;
+  const rows = document.getElementById('citationRows');
+  rows.innerHTML = '';
+  s.citations.forEach(c => {
+    addRow(c.url, c.claim);
+  });
+}
+
+function addRow(url = '', claim = '') {
+  const rows = document.getElementById('citationRows');
+  if (rows.children.length >= 10) return;
+  const div = document.createElement('div');
+  div.className = 'citation-row';
+  div.innerHTML = `
+    <input type="url" class="citation-input url-input" placeholder="https://source-url.com/..." value="${url}">
+    <input type="text" class="citation-input claim-input" placeholder="Claim the AI made about this source..." value="${claim}">
+    <button class="remove-btn" onclick="removeRow(this)">×</button>
+  `;
+  rows.appendChild(div);
+}
+
+function removeRow(btn) {
+  const rows = document.getElementById('citationRows');
+  if (rows.children.length <= 1) return;
+  btn.closest('.citation-row').remove();
+}
+
+async function runCheck() {
+  const answer = document.getElementById('answerText').value.trim();
+  if (!answer) { alert('Please paste an AI answer first.'); return; }
+
+  const rows = document.querySelectorAll('.citation-row');
+  const citations = [];
+  rows.forEach(row => {
+    const url = row.querySelector('.url-input').value.trim();
+    const claim = row.querySelector('.claim-input').value.trim();
+    if (url && claim) citations.push({ url, claim });
+  });
+
+  if (citations.length === 0) { alert('Please add at least one citation (URL + claim).'); return; }
+
+  document.getElementById('runBtn').disabled = true;
+  document.getElementById('results').classList.remove('active');
+  document.getElementById('results').style.display = 'none';
+  document.getElementById('loading').classList.add('active');
+
+  // Animate loading steps
+  const steps = ['step1','step2','step3','step4'];
+  const delays = [0, 1200, 2500, 4000];
+  steps.forEach((id, i) => {
+    setTimeout(() => {
+      if (i > 0) document.getElementById(steps[i-1]).className = 'loading-step done';
+      document.getElementById(id).className = 'loading-step active';
+    }, delays[i]);
+  });
+
+  try {
+    const response = await fetch('/check', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ answer, citations })
+    });
+
+    if (!response.ok) throw new Error(`Server error: ${response.status}`);
+    const data = await response.json();
+
+    steps.forEach(id => document.getElementById(id).className = 'loading-step done');
+    setTimeout(() => {
+      document.getElementById('loading').classList.remove('active');
+      renderResults(data);
+    }, 500);
+
+  } catch (err) {
+    document.getElementById('loading').classList.remove('active');
+    document.getElementById('runBtn').disabled = false;
+    alert('Error: ' + err.message + '\n\nMake sure the backend is running on http://localhost:8000');
+  }
+}
+
+function renderResults(data) {
+  // Score ring
+  const score = data.overall_score;
+  const circumference = 239;
+  const offset = circumference - (score / 100) * circumference;
+  const circle = document.getElementById('scoreCircle');
+  circle.style.strokeDashoffset = circumference;
+  setTimeout(() => { circle.style.strokeDashoffset = offset; }, 100);
+
+  const color = score >= 70 ? 'var(--green)' : score >= 40 ? 'var(--yellow)' : 'var(--red)';
+  circle.style.stroke = color;
+  document.getElementById('scoreNum').textContent = score + '%';
+  document.getElementById('scoreNum').style.color = color;
+  document.getElementById('overallVerdict').textContent = data.verdict;
+
+  const trustEl = document.getElementById('trustBadge');
+  trustEl.textContent = data.trust_level.replace('_', ' ').toUpperCase();
+  trustEl.className = `trust-badge trust-${data.trust_level}`;
+
+  // Citation results
+  const container = document.getElementById('citationResults');
+  container.innerHTML = '';
+  data.results.forEach((r, i) => {
+    const scoreColor = r.faithfulness_score >= 70 ? 'var(--green)' : r.faithfulness_score >= 40 ? 'var(--yellow)' : 'var(--red)';
+    const statusClass = `status-${r.status}`;
+    const div = document.createElement('div');
+    div.className = 'citation-result';
+    div.innerHTML = `
+      <div class="result-header" onclick="toggleResult(this)">
+        <span class="result-status-badge ${statusClass}">${r.status_label}</span>
+        <span class="result-url">${r.url}</span>
+        <span class="result-score" style="color:${scoreColor}">${r.faithfulness_score}%</span>
+        <span class="chevron">▾</span>
+      </div>
+      <div class="result-body">
+        <div class="result-grid">
+          <div class="result-col">
+            <div class="result-col-label">// What AI Claimed</div>
+            <div class="result-col-text">${esc(r.claim)}</div>
+            ${r.fabricated_parts ? `<div class="fabricated-tag">⚠ Not in source: ${esc(r.fabricated_parts)}</div>` : ''}
+          </div>
+          <div class="result-col">
+            <div class="result-col-label">// What Source Actually Says</div>
+            <div class="result-col-text">${r.what_source_says ? esc(r.what_source_says) : '<span style="color:var(--muted)">Could not verify — source unavailable</span>'}</div>
+            <div class="result-col-text" style="margin-top:12px;color:var(--muted)">${esc(r.explanation)}</div>
+            <a href="${esc(r.url)}" target="_blank" class="source-link">View Source ↗</a>
+          </div>
+        </div>
+      </div>
+    `;
+    container.appendChild(div);
+  });
+
+  document.getElementById('results').style.display = 'block';
+  document.getElementById('results').classList.add('active');
+  document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
+}
+
+function toggleResult(header) {
+  header.closest('.citation-result').classList.toggle('open');
+}
+
+function resetAll() {
+  document.getElementById('results').style.display = 'none';
+  document.getElementById('results').classList.remove('active');
+  document.getElementById('runBtn').disabled = false;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function esc(s) {
+  if (!s) return '';
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+</script>
+</body>
+</html>
