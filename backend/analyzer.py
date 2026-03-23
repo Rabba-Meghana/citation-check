@@ -6,7 +6,7 @@ from scraper import fetch_all_urls
 
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
 GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
-MODEL = "llama3-70b-8192"
+MODEL = "llama-3.3-70b-versatile"
 
 async def groq_chat(prompt: str, max_tokens: int = 1000) -> str:
     async with httpx.AsyncClient(timeout=30.0) as client:
