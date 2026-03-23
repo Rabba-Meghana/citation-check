@@ -44,7 +44,7 @@ Overall trust verdict + forensic report
 
 - **Backend:** Python + FastAPI + async httpx
 - **Scraping:** BeautifulSoup4 (concurrent URL fetching)
-- **AI Layer:** Anthropic Claude API (semantic comparison)
+- **AI Layer:** Groq API + Llama3-70b (semantic comparison, FREE)
 - **Frontend:** Vanilla HTML/CSS/JS (zero dependencies)
 
 ---
@@ -67,7 +67,7 @@ pip install -r requirements.txt
 ```bash
 cp ../.env.example .env
 # Add your Anthropic API key to .env
-export ANTHROPIC_API_KEY=your_key_here
+export GROQ_API_KEY=your_groq_api_key_here
 ```
 
 ### 4. Run the backend

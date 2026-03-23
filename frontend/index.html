@@ -542,7 +542,7 @@ async function runCheck() {
   });
 
   try {
-    const response = await fetch('/check', {
+    const response = await fetch('http://localhost:8000/check', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ answer, citations })
