@@ -6,7 +6,7 @@ HEADERS = {
     "User-Agent": "Mozilla/5.0 (compatible; CitationCheck/1.0; +https://github.com/Rabba-Meghana/citation-check)"
 }
 
-async def fetch_url_content(url: str, max_chars: int = 4000) -> dict:
+async def fetch_url_content(url: str, max_chars: int = 1500) -> dict:
     """
     Fetches and extracts clean text content from a URL.
     Returns { "url", "content", "title", "error" }
