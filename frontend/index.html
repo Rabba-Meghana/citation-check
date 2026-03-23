@@ -566,7 +566,7 @@ async function runCheck() {
 
 function renderResults(data) {
   // Score ring
-  const score = data.overall_score;
+  const score = data.overall_score || 0;
   const circumference = 239;
   const offset = circumference - (score / 100) * circumference;
   const circle = document.getElementById('scoreCircle');
@@ -577,11 +577,11 @@ function renderResults(data) {
   circle.style.stroke = color;
   document.getElementById('scoreNum').textContent = score + '%';
   document.getElementById('scoreNum').style.color = color;
-  document.getElementById('overallVerdict').textContent = data.verdict;
+  document.getElementById('overallVerdict').textContent = data.verdict || 'Analysis complete.';
 
   const trustEl = document.getElementById('trustBadge');
-  trustEl.textContent = data.trust_level.replace('_', ' ').toUpperCase();
-  trustEl.className = `trust-badge trust-${data.trust_level}`;
+  const tl = data.trust_level || 'unknown'; trustEl.textContent = tl.replace('_', ' ').toUpperCase();
+  trustEl.className = `trust-badge trust-${tl}`;
 
   // Citation results
   const container = document.getElementById('citationResults');

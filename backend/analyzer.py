@@ -69,7 +69,7 @@ RESULTS:
 STATS: avg faithfulness {avg:.0f}%, hallucinated {hallucinated}/{len(results)}, faithful {faithful}/{len(results)}
 
 Respond ONLY with JSON, no markdown:
-{{"verdict": "<2-3 sentence verdict>", "trust_level": "<high|medium|low|very_low>", "key_issue": "<biggest problem or null>"}}"""
+{{"verdict": "<2-3 sentence verdict>", "trust_level": "<high or medium or low or very_low>", "key_issue": "<biggest problem or null>"}}"""
 
     raw = await groq_chat(prompt, max_tokens=300)
     clean = raw.replace("```json", "").replace("```", "").strip()
