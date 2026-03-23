@@ -156,9 +156,5 @@ Tested on 30 Perplexity answers across science, health, and tech topics:
 
 ## Author
 
-**Rabba Meghana** — ML/LLM Engineer  
-[GitHub](https://github.com/Rabba-Meghana) · [LinkedIn](#)
+**Rabba Meghana** 
 
----
-
-*Built as a targeted project for Perplexity AI's LLM Engineer role.*
